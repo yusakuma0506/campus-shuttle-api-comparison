@@ -1,3 +1,1 @@
-export async function GET() {
-  return Response.json([]);
-}
+export { GET, POST } from "@/app/api/v1/routes/route";

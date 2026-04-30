@@ -1,3 +1,1 @@
-export async function POST() {
-  return Response.json({ message: "login placeholder" });
-}
+export { POST } from "@/app/api/v1/auth/login/route";

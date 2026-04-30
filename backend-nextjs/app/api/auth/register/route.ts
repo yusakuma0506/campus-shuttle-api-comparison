@@ -1,3 +1,1 @@
-export async function POST() {
-  return Response.json({ message: "register placeholder" });
-}
+export { POST } from "@/app/api/v1/auth/register/route";

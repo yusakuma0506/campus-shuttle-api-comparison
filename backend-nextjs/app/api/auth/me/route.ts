@@ -1,3 +1,3 @@
-export async function GET() {
-  return Response.json({ message: "me placeholder" });
-}
+export const dynamic = "force-dynamic";
+
+export { GET } from "@/app/api/v1/auth/me/route";

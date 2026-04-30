@@ -6,3 +6,85 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(100)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.Text
+  role         String   @default("operator") @db.VarChar(50)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("users")
+}
+
+model Route {
+  id          Int         @id @default(autoincrement())
+  name        String      @db.VarChar(100)
+  description String?     @db.Text
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6)
+  buses       Bus[]
+  routeStops  RouteStop[]
+
+  @@map("routes")
+}
+
+model Bus {
+  id        Int           @id @default(autoincrement())
+  busNumber String        @unique @map("bus_number") @db.VarChar(50)
+  name      String        @db.VarChar(100)
+  status    String        @default("active") @db.VarChar(50)
+  routeId   Int?          @map("route_id")
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime      @default(now()) @map("updated_at") @db.Timestamptz(6)
+  route     Route?        @relation(fields: [routeId], references: [id], onDelete: SetNull)
+  locations BusLocation[]
+
+  @@index([routeId], map: "idx_buses_route_id")
+  @@map("buses")
+}
+
+model Stop {
+  id        Int         @id @default(autoincrement())
+  name      String      @db.VarChar(100)
+  latitude  Decimal     @db.Decimal(9, 6)
+  longitude Decimal     @db.Decimal(9, 6)
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime    @default(now()) @map("updated_at") @db.Timestamptz(6)
+  routeStops RouteStop[]
+
+  @@map("stops")
+}
+
+model RouteStop {
+  id                        Int      @id @default(autoincrement())
+  routeId                   Int      @map("route_id")
+  stopId                    Int      @map("stop_id")
+  stopOrder                 Int      @map("stop_order")
+  estimatedMinutesFromStart Int      @map("estimated_minutes_from_start")
+  createdAt                 DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  route                     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  stop                      Stop     @relation(fields: [stopId], references: [id], onDelete: Cascade)
+
+  @@unique([routeId, stopId])
+  @@unique([routeId, stopOrder])
+  @@index([routeId, stopOrder], map: "idx_route_stops_route_order")
+  @@map("route_stops")
+}
+
+model BusLocation {
+  id         Int      @id @default(autoincrement())
+  busId      Int      @map("bus_id")
+  latitude   Decimal  @db.Decimal(9, 6)
+  longitude  Decimal  @db.Decimal(9, 6)
+  speed      Decimal? @db.Decimal(6, 2)
+  recordedAt DateTime @map("recorded_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  bus        Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
+
+  @@index([busId, recordedAt(sort: Desc)], map: "idx_bus_locations_bus_recorded_at")
+  @@map("bus_locations")
+}
